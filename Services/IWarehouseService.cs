@@ -1,0 +1,9 @@
+﻿using APBD_4.DTOs;
+
+namespace APBD_4.Services;
+
+public interface IWarehouseService
+{
+    Task<ProductWarehouseResponseDto?> AddProductToWarehouseAsync(ProductWarehouseRequestDto requestDto);
+}
+
