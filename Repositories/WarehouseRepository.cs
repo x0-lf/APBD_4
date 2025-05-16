@@ -1,4 +1,5 @@
-﻿using APBD_4.Models;
+﻿using System.Data;
+using APBD_4.Models;
 using APBD_4.Data;
 using APBD_4.DTOs;
 using Microsoft.Data.SqlClient;
@@ -143,7 +144,7 @@ public class WarehouseRepository : IWarehouseRepository
 
             using (SqlCommand command = new SqlCommand("AddProductToWarehouse", connection))
             {
-                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.CommandType = CommandType.StoredProcedure;
 
                 command.Parameters.AddWithValue("@IdProduct", requestDto.IdProduct);
                 command.Parameters.AddWithValue("@IdWarehouse", requestDto.IdWarehouse);

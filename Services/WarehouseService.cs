@@ -27,7 +27,7 @@ public class WarehouseService : IWarehouseService
             {
                 try
                 {
-                    if (requestDto.Amount <= 0)
+                    if (requestDto.Amount < 0)
                         return null;
 
                     if (!await _repository.ProductExistsAsync(requestDto.IdProduct, connection, transaction))
