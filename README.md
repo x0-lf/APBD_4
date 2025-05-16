@@ -83,4 +83,5 @@ Content-Type: application/json
 "IdWarehouse": 1,
 "Amount": 125,
 "CreatedAt": "2025-12-31T12:00:00Z"
-}```
+}
+```
