@@ -1,5 +1,6 @@
 ﻿using APBD_4.Models;
 using APBD_4.Data;
+using APBD_4.DTOs;
 using Microsoft.Data.SqlClient;
 
 namespace APBD_4.Repositories;
@@ -90,6 +91,28 @@ public class WarehouseRepository : IWarehouseRepository
             await cmd.ExecuteNonQueryAsync();
         }
     }
+    
+    public async Task<bool> CheckIfFulfilledOrderExistsAsync(int productId, int amount, DateTime createdAt, SqlConnection connection, SqlTransaction transaction)
+    {
+        const string query = @"
+        SELECT IdOrder
+        FROM [Order]
+        WHERE IdProduct = @ProductId
+          AND Amount = @Amount
+          AND CreatedAt < @CreatedAt
+          AND FulfilledAt IS NOT NULL";
+
+        using (var cmd = new SqlCommand(query, connection, transaction))
+        {
+            cmd.Parameters.AddWithValue("@ProductId", productId);
+            cmd.Parameters.AddWithValue("@Amount", amount);
+            cmd.Parameters.AddWithValue("@CreatedAt", createdAt);
+
+            var result = await cmd.ExecuteScalarAsync();
+            return result != null;
+        }
+    }
+
 
     public async Task<int> InsertProductToWarehouseAsync(ProductWarehouse productWarehouse, SqlConnection connection,
         SqlTransaction transaction)
@@ -111,4 +134,30 @@ public class WarehouseRepository : IWarehouseRepository
             return Convert.ToInt32(result);
         }
     }
+    
+    public async Task<int?> CallAddProductToWarehouseProcedureAsync(ProductWarehouseRequestDto requestDto)
+    {
+        using (SqlConnection connection = _connectionFactory.CreateConnection())
+        {
+            await connection.OpenAsync();
+
+            using (SqlCommand command = new SqlCommand("AddProductToWarehouse", connection))
+            {
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                command.Parameters.AddWithValue("@IdProduct", requestDto.IdProduct);
+                command.Parameters.AddWithValue("@IdWarehouse", requestDto.IdWarehouse);
+                command.Parameters.AddWithValue("@Amount", requestDto.Amount);
+                command.Parameters.AddWithValue("@CreatedAt", requestDto.CreatedAt);
+
+                var result = await command.ExecuteScalarAsync();
+
+                if (result == null || !int.TryParse(result.ToString(), out int newId))
+                    return null;
+
+                return newId;
+            }
+        }
+    }
+
 }

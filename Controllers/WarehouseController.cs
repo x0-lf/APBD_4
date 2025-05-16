@@ -18,24 +18,65 @@ public class WarehouseController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AddProductToWarehouse([FromBody] ProductWarehouseRequestDto request)
     {
+        if (request.Amount <= 0)
+            return BadRequest("Amount must be greater than zero.");
+
         try
         {
-            if (request.Amount <= 0)
-                return BadRequest("Amount must be greater than zero.");
-
             var result = await _warehouseService.AddProductToWarehouseAsync(request);
 
-            if (result == null)
-                return NotFound("Invalid Product ID, Warehouse ID, or no matching order.");
-
-            if (result.IdProductWarehouse == -1)
-                return Conflict(result.Summary);
-
             return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
             return StatusCode(500, $"An error occurred: {ex.Message}");
         }
     }
+    
+    [HttpPost("proc")]
+    public async Task<IActionResult> AddProductToWarehouseViaProcedure([FromBody] ProductWarehouseRequestDto request)
+    {
+        if (request.Amount <= 0)
+            return BadRequest("Amount must be greater than 0");
+
+        try
+        {
+            var result = await _warehouseService.AddProductToWarehouseUsingProcedureAsync(request);
+
+            if (result == null)
+                return NotFound("Invalid Product ID, Warehouse ID, or no matching order.");
+
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            var message = ex.Message.ToLower();
+
+            if (message.Contains("no order to fullfill") || message.Contains("no order to fulfill"))
+                return Conflict("Order already fulfilled or invalid.");
+
+            if (message.Contains("idproduct") || message.Contains("idwarehouse"))
+                return NotFound(ex.Message);
+
+            return BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Unexpected error: {ex.Message}");
+        }
+    }
+
+
 }

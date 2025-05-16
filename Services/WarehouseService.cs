@@ -31,22 +31,29 @@ public class WarehouseService : IWarehouseService
                         return null;
 
                     if (!await _repository.ProductExistsAsync(requestDto.IdProduct, connection, transaction))
-                        return null;
+                        throw new ArgumentException("Product not found.");
 
                     if (!await _repository.WarehouseExistsAsync(requestDto.IdWarehouse, connection, transaction))
-                        return null;
+                        throw new ArgumentException("Warehouse not found.");
 
                     var order = await _repository.GetMatchingOrderAsync(requestDto.IdProduct, requestDto.Amount, requestDto.CreatedAt, connection, transaction);
+
                     if (order is null)
-                        return null;
+                    {
+                        var orderConflict = await _repository.CheckIfFulfilledOrderExistsAsync(
+                            requestDto.IdProduct, requestDto.Amount, requestDto.CreatedAt, connection, transaction
+                        );
+
+                        if (orderConflict)
+                            throw new InvalidOperationException("Order already fulfilled or duplicate attempt.");
+    
+                        throw new ArgumentException("Matching order not found.");
+                    }
+
 
                     if (await _repository.IsOrderAlreadyProcessedAsync(order.Value.IdOrder, connection, transaction))
                     {
-                        return new ProductWarehouseResponseDto
-                        {
-                            IdProductWarehouse = -1,
-                            Summary = $"Order {order.Value.IdOrder} already fulfilled."
-                        };
+                        throw new InvalidOperationException($"Order {order.Value.IdOrder} already fulfilled.");
                     }
 
                     await _repository.UpdateOrderFulfillmentDateAsync(order.Value.IdOrder, connection, transaction);
@@ -75,6 +82,27 @@ public class WarehouseService : IWarehouseService
                     throw;
                 }
             }
+        }
+    }
+    
+    public async Task<ProductWarehouseResponseDto?> AddProductToWarehouseUsingProcedureAsync(ProductWarehouseRequestDto requestDto)
+    {
+        try
+        {
+            var newId = await _repository.CallAddProductToWarehouseProcedureAsync(requestDto);
+
+            if (newId == null)
+                return null;
+
+            return new ProductWarehouseResponseDto
+            {
+                IdProductWarehouse = newId.Value,
+                Summary = $"(via procedure) Inserted product {requestDto.IdProduct} into warehouse {requestDto.IdWarehouse}."
+            };
+        }
+        catch (SqlException ex) when (ex.Class >= 11 && ex.Class <= 16)
+        {
+            throw new ArgumentException($"Stored procedure error: {ex.Message}");
         }
     }
 }

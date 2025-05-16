@@ -1,4 +1,5 @@
-﻿using APBD_4.Models;
+﻿using APBD_4.DTOs;
+using APBD_4.Models;
 using Microsoft.Data.SqlClient;
 
 namespace APBD_4.Repositories;
@@ -22,4 +23,12 @@ public interface IWarehouseRepository
     
     Task<int> InsertProductToWarehouseAsync
         (ProductWarehouse productWarehouse, SqlConnection connection, SqlTransaction transaction);
+
+    Task<bool> CheckIfFulfilledOrderExistsAsync(int productId, int amount, DateTime createdAt, SqlConnection connection,
+        SqlTransaction transaction);
+    //proc.sql
+    
+    Task<int?> CallAddProductToWarehouseProcedureAsync(ProductWarehouseRequestDto requestDto);
+    
+    
 }

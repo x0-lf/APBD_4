@@ -20,7 +20,7 @@ BEGIN
   
  IF @IdOrder IS NULL  
  BEGIN  
-  RAISERROR('Invalid parameter: There is no order to fullfill', 18, 0);  
+  RAISERROR('Invalid parameter: There is no order to fullfill', 16, 1);  
   RETURN;  
  END;  
    
