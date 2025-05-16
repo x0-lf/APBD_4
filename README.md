@@ -4,7 +4,7 @@ warehouse.
 It follows a clean, layered architecture and integrates SQL Server using
 (`SqlConnection`, `SqlCommand`, `SqlTransaction`) to perform database operations, including stored procedures.
 
-It's coded way better than the previous project: [APBD_3 – Task 8 REST API](https://github.com/yourusername/APBD_3)
+It's coded way better than the previous project: [APBD_3 – Task 8 REST API](https://github.com/x0-lf/APBD_3)
 
 ## Each layer has a clearly defined responsibility: 
 - The `controller` exposes minimal logic and delegates cleanly to the `service` layer, which encapsulates all business rules and error handling.
