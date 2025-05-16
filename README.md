@@ -74,7 +74,7 @@ Content-Type: application/json
 }
 ```
 ### POST request for the stored procedure:
-```
+```http
 POST {{APBD_4_HostAddress}}/api/warehouse/proc
 Content-Type: application/json
 
